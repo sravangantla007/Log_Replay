@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Log Replay</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Leaflet JS (global L) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Chart.js (global Chart) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+
+    <!-- Three.js import map for ES modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <!-- App modules -->
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════════════ -->
+    <header class="header">
+        <div class="logo">⬡ FLIGHT REPLAY</div>
+
+        <div class="file-area">
+            <label class="btn" for="file-input">📁 LOAD .BIN</label>
+            <input type="file" id="file-input" accept=".bin" style="display:none">
+            <span id="file-label" class="file-name">No file loaded</span>
+            <button class="btn" id="btn-test-data" title="Generate synthetic 40s rocket flight">⚡ TEST DATA</button>
+        </div>
+
+        <div class="stats">
+            <span class="stat-item">REC <span class="stat-value" id="stat-total">—</span></span>
+            <span class="stat-item">DUR <span class="stat-value" id="stat-duration">—</span></span>
+            <span class="stat-item">IMU <span class="stat-value" id="stat-imu">—</span></span>
+            <span class="stat-item">BARO <span class="stat-value" id="stat-baro">—</span></span>
+            <span class="stat-item">ADXL <span class="stat-value" id="stat-adxl">—</span></span>
+            <span class="stat-item">GPS <span class="stat-value" id="stat-gps">—</span></span>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAIN CONTENT
+         ═══════════════════════════════════════════════════════════ -->
+    <main class="main-content">
+
+        <!-- Left: Charts Panel -->
+        <section class="charts-panel">
+            <div class="chart-card">
+                <canvas id="chart-imu-accel"></canvas>
+            </div>
+            <div class="chart-card">
+                <canvas id="chart-imu-gyro"></canvas>
+            </div>
+            <div class="chart-card">
+                <canvas id="chart-adxl"></canvas>
+            </div>
+            <div class="chart-card">
+                <canvas id="chart-baro"></canvas>
+            </div>
+            <div class="chart-card">
+                <canvas id="chart-gps-alt"></canvas>
+            </div>
+        </section>
+
+        <!-- Right: 3D Viewer + Map -->
+        <section class="right-panel">
+            <div class="viewer-3d" id="viewer-3d">
+                <!-- Three.js canvas renders here -->
+            </div>
+            <div class="map-container" id="map-container">
+                <!-- Leaflet map renders here -->
+            </div>
+        </section>
+
+        <!-- Welcome overlay (shown when no data is loaded) -->
+        <div class="welcome" id="welcome">
+            <h2>FLIGHT LOG REPLAY</h2>
+            <p>Drop a <code>.bin</code> flight log file here<br>or click <strong>LOAD .BIN</strong> to begin</p>
+            <p class="dim">Press <strong>⚡ TEST DATA</strong> to load a synthetic rocket flight</p>
+            <div class="shortcut-hints">
+                <span><kbd>Space</kbd> Play/Pause</span>
+                <span><kbd>←</kbd><kbd>→</kbd> Step</span>
+                <span><kbd>Home</kbd><kbd>End</kbd> Jump</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PLAYBACK CONTROLS
+         ═══════════════════════════════════════════════════════════ -->
+    <footer class="controls">
+        <div class="transport">
+            <button class="btn" id="btn-step-back" title="Step backward (←)">◀◀</button>
+            <button class="btn" id="btn-play" title="Play (Space)">▶ PLAY</button>
+            <button class="btn active" id="btn-pause" title="Pause (Space)" style="display:none">⏸ PAUSE</button>
+            <button class="btn" id="btn-step-forward" title="Step forward (→)">▶▶</button>
+        </div>
+
+        <input type="range" class="scrubber" id="scrubber" min="0" max="0" value="0" step="1">
+
+        <div class="playback-info">
+            <select class="speed-select" id="speed-select" title="Playback speed">
+                <option value="0.25">0.25×</option>
+                <option value="0.5">0.5×</option>
+                <option value="1" selected>1×</option>
+                <option value="2">2×</option>
+                <option value="5">5×</option>
+                <option value="10">10×</option>
+            </select>
+            <span class="time-display" id="time-display">00:00.000 / 00:00.000</span>
+            <span class="record-counter" id="record-counter">0 / 0</span>
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         DRAG & DROP OVERLAY
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="drop-overlay" id="drop-overlay">
+        <div class="drop-text">DROP .BIN FILE</div>
+    </div>
+
+</body>
+</html>
