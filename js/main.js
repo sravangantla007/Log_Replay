@@ -155,9 +155,13 @@ function processBuffer(buffer, filename) {
     timeline.load(records);
     charts.loadData(records);
     
-    // Load GPS track
+    // Load GPS track — re-init map to ensure container is sized
     const gpsRecords = records.filter(r => r.type === TYPE_GPS);
+    flightMap.init();  // re-init if needed (no-ops if already launched)
     flightMap.loadTrack(gpsRecords);
+    // Staggered invalidateSize to catch CSS grid layout settling
+    setTimeout(() => flightMap.invalidateSize(), 100);
+    setTimeout(() => flightMap.invalidateSize(), 500);
 
     // Reset 3D viewer
     if (viewer3d) viewer3d.reset();
@@ -175,30 +179,44 @@ function processBuffer(buffer, filename) {
 
 // ── Timeline Event Handlers ───────────────────────────────────────
 
-function onTimelineTick(record, index) {
-    // Update charts cursor
-    charts.updateCursor(record.time);
+// Accumulate latest sensor data per frame — only the last value matters
+let latestIMU = null;
+let latestGPS = null;
 
-    // Route to type-specific handlers
+function onTimelineTick(record, index) {
+    // Buffer the latest data per type — cheap assignments, no rendering
     switch (record.type) {
         case TYPE_IMU:
-            if (viewer3d) viewer3d.updateOrientation(record.data);
+            latestIMU = record.data;
             break;
         case TYPE_GPS:
-            flightMap.updatePosition(record.data);
+            latestGPS = record.data;
             break;
-        // BARO, ADXL, BOARD — charts handle via cursor, no extra routing needed
     }
 }
 
 function onIndexChange(index, total) {
-    // Update scrubber position (throttled via rAF to avoid flooding)
+    // ── This fires ONCE per animation frame ──
+
+    // Update scrubber position
     scrubber.value = index;
     
     const time = timeline.currentTime;
     const baseTime = timeline.records[0]?.time ?? 0;
     updateTimeDisplay(time - baseTime, timeline.duration);
     updateRecordCounter(index, total);
+
+    // ── Render updates (once per frame) ──
+    charts.updateCursor(time);
+
+    if (latestIMU && viewer3d) {
+        viewer3d.updateOrientation(latestIMU);
+        latestIMU = null;
+    }
+    if (latestGPS) {
+        flightMap.updatePosition(latestGPS);
+        latestGPS = null;
+    }
 }
 
 function onStateChange(playing) {

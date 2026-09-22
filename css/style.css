@@ -321,9 +321,11 @@ body {
   background: var(--bg-primary);
   height: 100%;
   width: 100%;
+  min-height: 200px;
 }
 
-.map-container .leaflet-container {
+/* Leaflet adds .leaflet-container to the same div passed to L.map() */
+.map-container.leaflet-container {
   width: 100%;
   height: 100%;
 }
