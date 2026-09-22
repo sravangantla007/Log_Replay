@@ -75,6 +75,15 @@ function init() {
 
     // UI event handlers
     fileInput.addEventListener('change', onFileSelected);
+
+    const btnWelcomeTest = document.getElementById('btn-welcome-test');
+    if (btnWelcomeTest) {
+        btnWelcomeTest.addEventListener('click', () => {
+            const buffer = generateTestData();
+            processBuffer(buffer, 'Synthetic_Flight.bin');
+        });
+    }
+
     btnPlay.addEventListener('click', () => timeline.play());
     btnPause.addEventListener('click', () => timeline.pause());
     btnStepBack.addEventListener('click', () => timeline.stepBack());

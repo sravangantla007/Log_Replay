@@ -113,8 +113,11 @@
         <!-- Welcome overlay (shown when no data is loaded) -->
         <div class="welcome" id="welcome">
             <h2>FLIGHT LOG REPLAY</h2>
-            <p>Drop a <code>.bin</code> flight log file here<br>or click <strong>LOAD .BIN</strong> to begin</p>
-            <p class="dim">Press <strong>⚡ TEST DATA</strong> to load a synthetic rocket flight</p>
+            <p style="margin-bottom: 20px;">Load a flight log or generate test data to begin</p>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px;">
+                <label class="btn" for="file-input" style="font-size: 14px; padding: 10px 20px;">📁 LOAD .BIN</label>
+                <button class="btn" id="btn-welcome-test" style="font-size: 14px; padding: 10px 20px;">⚡ TEST DATA</button>
+            </div>
             <div class="shortcut-hints">
                 <span><kbd>Space</kbd> Play/Pause</span>
                 <span><kbd>←</kbd><kbd>→</kbd> Step</span>
