@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
 /**
  * 3D Orientation Visualizer for Avionics PCB using Three.js.
@@ -91,43 +90,40 @@ export class Viewer3D {
     this.animationFrameId = requestAnimationFrame(this._animate);
   }
 
-  /**
-   * Builds the PCB group with STL model (if available), or falls back to an upright cuboid.
-   */
   _createPcbCuboid() {
     this.pcbGroup = new THREE.Group();
     this.scene.add(this.pcbGroup);
 
-    const loader = new STLLoader();
-    loader.load('board.stl', (geometry) => {
-      geometry.center();
-      const material = new THREE.MeshPhongMaterial({ color: 0x0a2a4a });
-      const mesh = new THREE.Mesh(geometry, material);
-      
-      // Auto-scale to fit within ~3.5 units
-      geometry.computeBoundingBox();
-      const size = new THREE.Vector3();
-      geometry.boundingBox.getSize(size);
+    const loader = new THREE.ObjectLoader();
+    loader.load('board.json', (obj) => {
+      // Find the geometry from the loaded scene to center and scale it
+      const box = new THREE.Box3().setFromObject(obj);
+      const center = box.getCenter(new THREE.Vector3());
+      obj.position.sub(center); // Center it
+
+      const size = box.getSize(new THREE.Vector3());
       const scale = 3.5 / Math.max(size.x, size.y, size.z);
-      mesh.scale.set(scale, scale, scale);
-      
-      // Adjust rotation to make large face face +X (depends on STEP origin)
-      // Standard STL might be Y-up or Z-up. Usually we want it upright.
-      mesh.rotation.y = Math.PI / 2;
-      mesh.rotation.x = Math.PI / 2;
+      obj.scale.set(scale, scale, scale);
 
-      this.pcbGroup.add(mesh);
+      // Adjust rotation to make large face face +X
+      obj.rotation.y = Math.PI / 2;
+      obj.rotation.x = Math.PI / 2;
 
-      const edges = new THREE.EdgesGeometry(geometry);
-      const edgeLines = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.15 }));
-      edgeLines.scale.copy(mesh.scale);
-      edgeLines.rotation.copy(mesh.rotation);
-      this.pcbGroup.add(edgeLines);
+      this.pcbGroup.add(obj);
+
+      // Optionally add edges to all meshes
+      obj.traverse((child) => {
+        if (child.isMesh) {
+            const edges = new THREE.EdgesGeometry(child.geometry);
+            const edgeLines = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 }));
+            child.add(edgeLines);
+        }
+      });
       
       this._addAxisDots();
-      console.log('Loaded Avionics Board STL successfully');
+      console.log('Loaded Avionics Board JSON successfully (with colors)');
     }, undefined, (error) => {
-      console.warn('Failed to load STL, using fallback upright cuboid', error);
+      console.warn('Failed to load JSON, using fallback upright cuboid', error);
       
       // Fallback: Upright cuboid facing +X (Thinnest dimension X=0.3)
       const pcbGeometry = new THREE.BoxGeometry(0.3, 2.5, 3.5);
