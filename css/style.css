@@ -45,11 +45,11 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
-  height: 100vh;
+  height: 100vh; /* fallback */
+  height: 100dvh; /* dynamic viewport height for mobile */
   width: 100vw;
   overflow: hidden;
 }
@@ -869,4 +869,32 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 800px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50% 50%;
+    overflow-y: auto;
+  }
+  
+  .right-panel {
+    border-left: none;
+    border-top: 1px solid var(--border-panel);
+  }
+
+  .controls {
+    padding: 0 10px;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .header {
+    overflow-x: auto;
+  }
+
+  .file-name {
+    display: none; /* hide filename on mobile to save space */
+  }
 }
