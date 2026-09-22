@@ -199,13 +199,44 @@ body {
 }
 
 /* --- 6. Main Content Area (.main-content) --- */
+:root {
+  --split-v: 55%;
+  --split-h: 55%;
+}
+
 .main-content {
   grid-row: 2;
   display: grid;
-  grid-template-columns: 55% 45%;
+  grid-template-columns: var(--split-v) 8px calc(100% - var(--split-v) - 8px);
   gap: 0;
   overflow: hidden;
   position: relative;
+}
+
+.splitter-v {
+  width: 8px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-panel);
+  border-right: 1px solid var(--border-panel);
+  cursor: col-resize;
+  z-index: 10;
+  transition: background 0.2s;
+}
+.splitter-v:hover, .splitter-v.dragging {
+  background: var(--primary-accent);
+}
+
+.splitter-h {
+  height: 8px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-panel);
+  border-bottom: 1px solid var(--border-panel);
+  cursor: row-resize;
+  z-index: 10;
+  transition: background 0.2s;
+}
+.splitter-h:hover, .splitter-h.dragging {
+  background: var(--primary-accent);
 }
 
 /* --- 7. Charts Panel (.charts-panel) --- */
@@ -320,7 +351,7 @@ body {
 /* --- 8. Right Panel (.right-panel) --- */
 .right-panel {
   display: grid;
-  grid-template-rows: 55% 45%;
+  grid-template-rows: var(--split-h) 8px calc(100% - var(--split-h) - 8px);
   gap: 0;
   border-left: 1px solid var(--border-panel);
   overflow: hidden;
@@ -896,5 +927,9 @@ kbd {
 
   .file-name {
     display: none; /* hide filename on mobile to save space */
+  }
+
+  .status-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -107,6 +107,63 @@ function init() {
     // Drag and drop
     setupDragDrop();
 
+    // ── Resizable Splitters ───────────────────────────────────────────
+    const splitterV = document.getElementById('splitter-v');
+    const splitterH = document.getElementById('splitter-h');
+    const root = document.documentElement;
+
+    if (splitterV) {
+        let isDraggingV = false;
+        
+        const startDragV = (e) => { isDraggingV = true; splitterV.classList.add('dragging'); e.preventDefault(); };
+        const endDragV = () => { isDraggingV = false; splitterV.classList.remove('dragging'); };
+        const dragV = (e) => {
+            if (!isDraggingV) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let newSplit = (clientX / window.innerWidth) * 100;
+            newSplit = Math.max(10, Math.min(newSplit, 90));
+            root.style.setProperty('--split-v', `${newSplit}%`);
+            charts.resize();
+            if (flightMap) flightMap.invalidateSize();
+        };
+
+        splitterV.addEventListener('mousedown', startDragV);
+        splitterV.addEventListener('touchstart', startDragV, {passive: false});
+        
+        document.addEventListener('mousemove', dragV);
+        document.addEventListener('touchmove', dragV, {passive: false});
+        
+        document.addEventListener('mouseup', endDragV);
+        document.addEventListener('touchend', endDragV);
+    }
+
+    if (splitterH) {
+        let isDraggingH = false;
+        
+        const startDragH = (e) => { isDraggingH = true; splitterH.classList.add('dragging'); e.preventDefault(); };
+        const endDragH = () => { isDraggingH = false; splitterH.classList.remove('dragging'); };
+        const dragH = (e) => {
+            if (!isDraggingH) return;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rightPanel = document.getElementById('right-panel');
+            if (!rightPanel) return;
+            const rect = rightPanel.getBoundingClientRect();
+            let newSplit = ((clientY - rect.top) / rect.height) * 100;
+            newSplit = Math.max(10, Math.min(newSplit, 90));
+            root.style.setProperty('--split-h', `${newSplit}%`);
+            if (flightMap) flightMap.invalidateSize();
+        };
+
+        splitterH.addEventListener('mousedown', startDragH);
+        splitterH.addEventListener('touchstart', startDragH, {passive: false});
+        
+        document.addEventListener('mousemove', dragH);
+        document.addEventListener('touchmove', dragH, {passive: false});
+        
+        document.addEventListener('mouseup', endDragH);
+        document.addEventListener('touchend', endDragH);
+    }
+
     console.log('[FlightReplay] Initialized');
 }
 

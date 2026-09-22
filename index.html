@@ -88,23 +88,28 @@
                     <span class="chart-val-preview" id="board-state-text">STATE: PAD</span>
                 </div>
                 <div class="status-grid" id="status-grid">
-                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">ERR 0</span></div>
-                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">ERR 1</span></div>
-                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">ERR 2</span></div>
-                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">ERR 3</span></div>
-                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">ERR 4</span></div>
-                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">ERR 5</span></div>
-                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">ERR 6</span></div>
-                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">ERR 7</span></div>
+                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">IMU_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">BARO_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">ADXL_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">GPS_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">FLASH_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">PYRO_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">SYS_ERR</span></div>
+                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">BAT_LOW</span></div>
                 </div>
             </div>
         </section>
 
+        <div class="splitter-v" id="splitter-v"></div>
+
         <!-- Right: 3D Viewer + Map -->
-        <section class="right-panel">
+        <section class="right-panel" id="right-panel">
             <div class="viewer-3d" id="viewer-3d">
                 <!-- Three.js canvas renders here -->
             </div>
+            
+            <div class="splitter-h" id="splitter-h"></div>
+            
             <div class="map-container" id="map-container">
                 <!-- Leaflet map renders here -->
             </div>
