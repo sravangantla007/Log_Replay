@@ -70,9 +70,8 @@ export class FlightMap {
     // Default view: [0, 0] zoom level 2
     this.map.setView([0, 0], 2);
 
-    // Add CartoDB Dark Matter tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
+    // Add OpenStreetMap tile layer (free, no API key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
     }).addTo(this.map);
 
@@ -472,6 +471,12 @@ export class FlightMap {
         background-color: #0c1017 !important;
         font-family: inherit;
         outline: none;
+      }
+      .leaflet-layer,
+      .leaflet-control-zoom-in,
+      .leaflet-control-zoom-out,
+      .leaflet-control-attribution {
+        filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
       }
       .leaflet-bar {
         border: 1px solid rgba(0, 229, 255, 0.3) !important;

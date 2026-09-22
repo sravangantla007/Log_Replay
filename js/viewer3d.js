@@ -91,66 +91,80 @@ export class Viewer3D {
   }
 
   /**
-   * Builds the PCB cuboid group with edges, wireframe overlay, and axis edge dots.
-   * Box dimensions: X=2.5 (depth toward user), Y=3.5 (width right), Z=0.3 (height up)
+   * Builds the PCB group with STL model (if available), or falls back to an upright cuboid.
    */
   _createPcbCuboid() {
     this.pcbGroup = new THREE.Group();
+    this.scene.add(this.pcbGroup);
 
-    // Cuboid geometry: X=2.5, Y=3.5, Z=0.3
-    const pcbGeometry = new THREE.BoxGeometry(2.5, 3.5, 0.3);
+    const loader = new STLLoader();
+    loader.load('board.stl', (geometry) => {
+      geometry.center();
+      const material = new THREE.MeshPhongMaterial({ color: 0x0a2a4a });
+      const mesh = new THREE.Mesh(geometry, material);
+      
+      // Auto-scale to fit within ~3.5 units
+      geometry.computeBoundingBox();
+      const size = new THREE.Vector3();
+      geometry.boundingBox.getSize(size);
+      const scale = 3.5 / Math.max(size.x, size.y, size.z);
+      mesh.scale.set(scale, scale, scale);
+      
+      // Adjust rotation to make large face face +X (depends on STEP origin)
+      // Standard STL might be Y-up or Z-up. Usually we want it upright.
+      mesh.rotation.y = Math.PI / 2;
+      mesh.rotation.x = Math.PI / 2;
 
-    // Main material
-    const mainMaterial = new THREE.MeshPhongMaterial({
-      color: 0x0a1628,
-      transparent: true,
-      opacity: 0.7,
-      side: THREE.DoubleSide
+      this.pcbGroup.add(mesh);
+
+      const edges = new THREE.EdgesGeometry(geometry);
+      const edgeLines = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.15 }));
+      edgeLines.scale.copy(mesh.scale);
+      edgeLines.rotation.copy(mesh.rotation);
+      this.pcbGroup.add(edgeLines);
+      
+      this._addAxisDots();
+      console.log('Loaded Avionics Board STL successfully');
+    }, undefined, (error) => {
+      console.warn('Failed to load STL, using fallback upright cuboid', error);
+      
+      // Fallback: Upright cuboid facing +X (Thinnest dimension X=0.3)
+      const pcbGeometry = new THREE.BoxGeometry(0.3, 2.5, 3.5);
+      const mainMaterial = new THREE.MeshPhongMaterial({
+        color: 0x0a1628, transparent: true, opacity: 0.7, side: THREE.DoubleSide
+      });
+      const pcbMesh = new THREE.Mesh(pcbGeometry, mainMaterial);
+      this.pcbGroup.add(pcbMesh);
+
+      const edgesGeometry = new THREE.EdgesGeometry(pcbGeometry);
+      const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 1 });
+      this.pcbGroup.add(new THREE.LineSegments(edgesGeometry, edgeMaterial));
+      
+      const wireframeGeometry = new THREE.WireframeGeometry(pcbGeometry);
+      const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.1 });
+      this.pcbGroup.add(new THREE.LineSegments(wireframeGeometry, wireframeMaterial));
+      
+      this._addAxisDots();
     });
-    const pcbMesh = new THREE.Mesh(pcbGeometry, mainMaterial);
-    this.pcbGroup.add(pcbMesh);
+  }
 
-    // Edge highlight
-    const edgesGeometry = new THREE.EdgesGeometry(pcbGeometry);
-    const edgeMaterial = new THREE.LineBasicMaterial({
-      color: 0x00e5ff,
-      linewidth: 1
-    });
-    const edgeLines = new THREE.LineSegments(edgesGeometry, edgeMaterial);
-    this.pcbGroup.add(edgeLines);
-
-    // Wireframe overlay
-    const wireframeGeometry = new THREE.WireframeGeometry(pcbGeometry);
-    const wireframeMaterial = new THREE.LineBasicMaterial({
-      color: 0x00e5ff,
-      transparent: true,
-      opacity: 0.1
-    });
-    const wireframeLines = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
-    this.pcbGroup.add(wireframeLines);
-
-    // Colored indicator dots on PCB edges (radius: 0.08)
+  _addAxisDots() {
     const dotGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-
-    // +X edge dot: Red (#ff4444) at (+1.25, 0, 0)
-    const redMaterial = new THREE.MeshBasicMaterial({ color: 0xff4444 });
-    const dotX = new THREE.Mesh(dotGeometry, redMaterial);
-    dotX.position.set(1.25, 0, 0);
+    
+    // +X edge dot: Red
+    const dotX = new THREE.Mesh(dotGeometry, new THREE.MeshBasicMaterial({ color: 0xff4444 }));
+    dotX.position.set(0.15, 0, 0); // Moved close to +X face
     this.pcbGroup.add(dotX);
 
-    // +Y edge dot: Green (#44ff44) at (0, +1.75, 0)
-    const greenMaterial = new THREE.MeshBasicMaterial({ color: 0x44ff44 });
-    const dotY = new THREE.Mesh(dotGeometry, greenMaterial);
-    dotY.position.set(0, 1.75, 0);
+    // +Y edge dot: Green
+    const dotY = new THREE.Mesh(dotGeometry, new THREE.MeshBasicMaterial({ color: 0x44ff44 }));
+    dotY.position.set(0, 1.25, 0);
     this.pcbGroup.add(dotY);
 
-    // +Z edge dot: Blue (#4488ff) at (0, 0, +0.15)
-    const blueMaterial = new THREE.MeshBasicMaterial({ color: 0x4488ff });
-    const dotZ = new THREE.Mesh(dotGeometry, blueMaterial);
-    dotZ.position.set(0, 0, 0.15);
+    // +Z edge dot: Blue
+    const dotZ = new THREE.Mesh(dotGeometry, new THREE.MeshBasicMaterial({ color: 0x4488ff }));
+    dotZ.position.set(0, 0, 1.75);
     this.pcbGroup.add(dotZ);
-
-    this.scene.add(this.pcbGroup);
   }
 
   /**

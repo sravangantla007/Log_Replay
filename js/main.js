@@ -182,6 +182,7 @@ function processBuffer(buffer, filename) {
 // Accumulate latest sensor data per frame — only the last value matters
 let latestIMU = null;
 let latestGPS = null;
+let latestBOARD = null;
 
 function onTimelineTick(record, index) {
     // Buffer the latest data per type — cheap assignments, no rendering
@@ -191,6 +192,9 @@ function onTimelineTick(record, index) {
             break;
         case TYPE_GPS:
             latestGPS = record.data;
+            break;
+        case TYPE_BOARD:
+            latestBOARD = record.data;
             break;
     }
 }
@@ -216,6 +220,33 @@ function onIndexChange(index, total) {
     if (latestGPS) {
         flightMap.updatePosition(latestGPS);
         latestGPS = null;
+    }
+    if (latestBOARD) {
+        updateBoardStatus(latestBOARD);
+        latestBOARD = null;
+    }
+}
+
+function updateBoardStatus(boardData) {
+    // Update LEDs from error_code (bitmask)
+    const err = boardData.error_code || 0;
+    for (let i = 0; i < 8; i++) {
+        const led = document.getElementById(`led-e${i}`);
+        if (led) {
+            if ((err & (1 << i)) !== 0) {
+                led.className = 'led red'; // Bit set = error
+            } else {
+                led.className = 'led green'; // Bit clear = ok
+            }
+        }
+    }
+    
+    // Update State
+    const stateTxt = document.getElementById('board-state-text');
+    if (stateTxt) {
+        const states = ["INIT", "PAD", "BOOST", "COAST", "APOGEE", "DESCENT", "LANDED"];
+        const s = states[boardData.state] || `STATE ${boardData.state}`;
+        stateTxt.textContent = `STATE: ${s}`;
     }
 }
 

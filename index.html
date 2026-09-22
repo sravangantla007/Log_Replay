@@ -26,8 +26,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
         }
     }
     </script>
@@ -81,6 +81,22 @@
             </div>
             <div class="chart-card">
                 <canvas id="chart-gps-alt"></canvas>
+            </div>
+            <div class="chart-card status-card" style="height: auto; padding: 12px;">
+                <div class="chart-header">
+                    <span class="chart-title">BOARD STATUS</span>
+                    <span class="chart-val-preview" id="board-state-text">STATE: PAD</span>
+                </div>
+                <div class="status-grid" id="status-grid">
+                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">ERR 0</span></div>
+                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">ERR 1</span></div>
+                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">ERR 2</span></div>
+                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">ERR 3</span></div>
+                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">ERR 4</span></div>
+                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">ERR 5</span></div>
+                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">ERR 6</span></div>
+                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">ERR 7</span></div>
+                </div>
             </div>
         </section>
 
