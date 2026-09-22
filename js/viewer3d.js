@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * 3D Orientation Visualizer for Avionics PCB using Three.js.
@@ -10,11 +11,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
  * - Y = Right
  */
 export class Viewer3D {
-  /**
-   * @param {string | HTMLElement} containerId - DOM element or ID of container element
-   */
   constructor(containerId) {
-    // 1. Resolve container element
     this.container = typeof containerId === 'string'
       ? document.getElementById(containerId)
       : containerId;
@@ -23,7 +20,6 @@ export class Viewer3D {
       throw new Error(`Viewer3D: Container element "${containerId}" not found.`);
     }
 
-    // Ensure container has relative positioning for absolute HUD overlay
     const computedPosition = window.getComputedStyle(this.container).position;
     if (computedPosition === 'static') {
       this.container.style.position = 'relative';
@@ -32,7 +28,6 @@ export class Viewer3D {
     const width = this.container.clientWidth || 300;
     const height = this.container.clientHeight || 300;
 
-    // 2. WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
@@ -43,49 +38,43 @@ export class Viewer3D {
     this.renderer.domElement.style.display = 'block';
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
+    // Important for GLTF materials:
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.container.appendChild(this.renderer.domElement);
 
-    // 3. Scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a14);
 
-    // 4. Perspective Camera (Z-up coordinate system)
     this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    this.camera.up.set(0, 0, 1); // Z = UP
+    this.camera.up.set(0, 0, 1);
     this.camera.position.set(5, -4, 3.5);
     this.camera.lookAt(0, 0, 0);
 
-    // 5. OrbitControls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.target.set(0, 0, 0);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.update();
 
-    // 6. Lights
-    const ambientLight = new THREE.AmbientLight(0x404060);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     this.scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0x00e5ff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
     directionalLight.position.set(5, -5, 10);
     this.scene.add(directionalLight);
 
-    // 7. Orientation State
     this.currentYaw = 0;
     this.targetQuaternion = new THREE.Quaternion();
     this._lastTimestamp = null;
     this.isDestroyed = false;
 
-    // 8. Construct Elements
     this._createPcbCuboid();
     this._createAxisArrows();
     this._createGrid();
     this._createHUD();
 
-    // 9. Resize Observer
     this._setupResizeObserver();
 
-    // 10. Start Animation Loop
     this._animate = this._animate.bind(this);
     this.animationFrameId = requestAnimationFrame(this._animate);
   }
@@ -94,38 +83,29 @@ export class Viewer3D {
     this.pcbGroup = new THREE.Group();
     this.scene.add(this.pcbGroup);
 
-    const loader = new THREE.ObjectLoader();
-    loader.load('board.json', (obj) => {
-      // Find the geometry from the loaded scene to center and scale it
+    const loader = new GLTFLoader();
+    loader.load('board.glb', (gltf) => {
+      const obj = gltf.scene;
+      
       const box = new THREE.Box3().setFromObject(obj);
       const center = box.getCenter(new THREE.Vector3());
-      obj.position.sub(center); // Center it
+      obj.position.sub(center); 
 
       const size = box.getSize(new THREE.Vector3());
       const scale = 3.5 / Math.max(size.x, size.y, size.z);
       obj.scale.set(scale, scale, scale);
 
-      // Adjust rotation to make large face face +X
+      // Adjust rotation if needed to face +X upright
       obj.rotation.y = Math.PI / 2;
       obj.rotation.x = Math.PI / 2;
 
       this.pcbGroup.add(obj);
 
-      // Optionally add edges to all meshes
-      obj.traverse((child) => {
-        if (child.isMesh) {
-            const edges = new THREE.EdgesGeometry(child.geometry);
-            const edgeLines = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 }));
-            child.add(edgeLines);
-        }
-      });
-      
       this._addAxisDots();
-      console.log('Loaded Avionics Board JSON successfully (with colors)');
+      console.log('Loaded Avionics Board GLB successfully (with colors)');
     }, undefined, (error) => {
-      console.warn('Failed to load JSON, using fallback upright cuboid', error);
+      console.warn('Failed to load GLB, using fallback upright cuboid', error);
       
-      // Fallback: Upright cuboid facing +X (Thinnest dimension X=0.3)
       const pcbGeometry = new THREE.BoxGeometry(0.3, 2.5, 3.5);
       const mainMaterial = new THREE.MeshPhongMaterial({
         color: 0x0a1628, transparent: true, opacity: 0.7, side: THREE.DoubleSide
