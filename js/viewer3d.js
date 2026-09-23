@@ -89,17 +89,23 @@ export class Viewer3D {
       
       const box = new THREE.Box3().setFromObject(obj);
       const center = box.getCenter(new THREE.Vector3());
-      obj.position.sub(center); 
+      
+      const wrapper = new THREE.Group();
+      wrapper.add(obj);
 
+      // Translate the object so its bounding box center is exactly at the origin of the wrapper
+      obj.position.set(-center.x, -center.y, -center.z);
+
+      // Now apply scaling and rotation to the wrapper
       const size = box.getSize(new THREE.Vector3());
       const scale = 3.5 / Math.max(size.x, size.y, size.z);
-      obj.scale.set(scale, scale, scale);
+      wrapper.scale.set(scale, scale, scale);
 
       // Adjust rotation if needed to face +X upright
-      obj.rotation.y = Math.PI / 2;
-      obj.rotation.x = Math.PI / 2;
+      wrapper.rotation.y = Math.PI / 2;
+      wrapper.rotation.x = Math.PI / 2;
 
-      this.pcbGroup.add(obj);
+      this.pcbGroup.add(wrapper);
 
       this._addAxisDots();
       console.log('Loaded Avionics Board GLB successfully (with colors)');
