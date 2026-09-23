@@ -56,12 +56,20 @@ export class Viewer3D {
     this.controls.dampingFactor = 0.05;
     this.controls.update();
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.5); // Brighter ambient
     this.scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    directionalLight.position.set(5, -5, 10);
-    this.scene.add(directionalLight);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0);
+    hemiLight.position.set(0, 0, 10);
+    this.scene.add(hemiLight);
+
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight1.position.set(5, -5, 10);
+    this.scene.add(dirLight1);
+    
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 1.0);
+    dirLight2.position.set(-5, 5, -10);
+    this.scene.add(dirLight2);
 
     this.currentYaw = 0;
     this.targetQuaternion = new THREE.Quaternion();
@@ -105,6 +113,22 @@ export class Viewer3D {
       // Adjust rotation if needed to face +X upright
       this.pcbWrapper.rotation.y = Math.PI / 2;
       this.pcbWrapper.rotation.x = Math.PI / 2;
+
+      // Make materials brighter
+      this.pcbWrapper.traverse((child) => {
+        if (child.isMesh && child.material) {
+            // Convert to a basic array iteration if material is array
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            materials.forEach(mat => {
+                if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                    mat.metalness = 0.1; // Reduce metalness to stop it from reflecting black (since we have no environment map)
+                    mat.roughness = 0.8; // Increase roughness for softer, brighter diffuse light
+                    mat.envMapIntensity = 0.0;
+                    mat.needsUpdate = true;
+                }
+            });
+        }
+      });
 
       // Apply initial offset if set before load
       if (this.initialOffset) {
