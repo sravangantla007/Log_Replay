@@ -68,6 +68,7 @@ export class Viewer3D {
     this._lastTimestamp = null;
     this.isDestroyed = false;
 
+    this._createOffsetControls();
     this._createPcbCuboid();
     this._createAxisArrows();
     this._createGrid();
@@ -90,8 +91,8 @@ export class Viewer3D {
       const box = new THREE.Box3().setFromObject(obj);
       const center = box.getCenter(new THREE.Vector3());
       
-      const wrapper = new THREE.Group();
-      wrapper.add(obj);
+      this.pcbWrapper = new THREE.Group();
+      this.pcbWrapper.add(obj);
 
       // Translate the object so its bounding box center is exactly at the origin of the wrapper
       obj.position.set(-center.x, -center.y, -center.z);
@@ -99,13 +100,18 @@ export class Viewer3D {
       // Now apply scaling and rotation to the wrapper
       const size = box.getSize(new THREE.Vector3());
       const scale = 3.5 / Math.max(size.x, size.y, size.z);
-      wrapper.scale.set(scale, scale, scale);
+      this.pcbWrapper.scale.set(scale, scale, scale);
 
       // Adjust rotation if needed to face +X upright
-      wrapper.rotation.y = Math.PI / 2;
-      wrapper.rotation.x = Math.PI / 2;
+      this.pcbWrapper.rotation.y = Math.PI / 2;
+      this.pcbWrapper.rotation.x = Math.PI / 2;
 
-      this.pcbGroup.add(wrapper);
+      // Apply initial offset if set before load
+      if (this.initialOffset) {
+         this.pcbWrapper.position.copy(this.initialOffset);
+      }
+
+      this.pcbGroup.add(this.pcbWrapper);
 
       this._addAxisDots();
       console.log('Loaded Avionics Board GLB successfully (with colors)');
@@ -269,6 +275,86 @@ export class Viewer3D {
 
     this.container.appendChild(this.hudOverlay);
     this.updateHUD({ ax: 0, ay: 0, az: 2048, gx: 0, gy: 0, gz: 0 });
+  }
+
+  /**
+   * Creates a panel with sliders to adjust the origin offset.
+   */
+  _createOffsetControls() {
+    this.initialOffset = new THREE.Vector3(0, 0, 0);
+
+    this.offsetPanel = document.createElement('div');
+    Object.assign(this.offsetPanel.style, {
+      position: 'absolute',
+      bottom: '10px',
+      left: '10px',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: '11px',
+      color: '#fff',
+      background: 'rgba(10, 10, 20, 0.8)',
+      border: '1px solid rgba(0, 229, 255, 0.3)',
+      padding: '8px',
+      borderRadius: '4px',
+      zIndex: '10',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
+    });
+
+    const createSlider = (axis, min, max, val) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+      
+      const label = document.createElement('span');
+      label.textContent = `Offset ${axis.toUpperCase()}`;
+      label.style.width = '60px';
+      label.style.color = '#00e5ff';
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = min;
+      slider.max = max;
+      slider.step = 0.01;
+      slider.value = val;
+      slider.style.width = '100px';
+      slider.style.cursor = 'pointer';
+      
+      const valDisplay = document.createElement('span');
+      valDisplay.textContent = Number(val).toFixed(2);
+      valDisplay.style.width = '40px';
+      valDisplay.style.textAlign = 'right';
+      
+      slider.addEventListener('input', (e) => {
+        const numVal = parseFloat(e.target.value);
+        valDisplay.textContent = numVal.toFixed(2);
+        this.initialOffset[axis] = numVal;
+        if (this.pcbWrapper) {
+          this.pcbWrapper.position[axis] = numVal;
+        }
+      });
+      
+      row.appendChild(label);
+      row.appendChild(slider);
+      row.appendChild(valDisplay);
+      this.offsetPanel.appendChild(row);
+    };
+
+    const title = document.createElement('div');
+    title.textContent = 'MANUAL ORIGIN OFFSET';
+    title.style.color = '#00e5ff';
+    title.style.fontWeight = 'bold';
+    title.style.marginBottom = '4px';
+    title.style.textAlign = 'center';
+    this.offsetPanel.appendChild(title);
+
+    createSlider('x', -2, 2, 0);
+    createSlider('y', -2, 2, 0);
+    createSlider('z', -2, 2, 0);
+
+    this.container.appendChild(this.offsetPanel);
   }
 
   /**
