@@ -85,6 +85,27 @@ export class FlightMap {
       .addAttribution('&copy; <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM</a>')
       .addTo(this.map);
 
+    // Add a North indicator arrow in the top-right
+    const NorthControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function() {
+        const div = L.DomUtil.create('div', 'leaflet-control-north');
+        div.innerHTML = '⮝ N';
+        div.style.backgroundColor = 'rgba(10, 10, 20, 0.8)';
+        div.style.color = '#00e5ff';
+        div.style.border = '1px solid rgba(0, 229, 255, 0.3)';
+        div.style.padding = '4px 8px';
+        div.style.borderRadius = '4px';
+        div.style.fontFamily = "'JetBrains Mono', monospace";
+        div.style.fontSize = '12px';
+        div.style.fontWeight = 'bold';
+        div.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+        div.style.pointerEvents = 'none';
+        return div;
+      }
+    });
+    this.map.addControl(new NorthControl());
+
     this.launched = true;
 
     // Handle maps initialized inside hidden or resizing containers
