@@ -3,13 +3,15 @@ import os
 import struct
 import json
 import numpy as np
-import pyqtgraph as pg
 
+os.environ['PYQTGRAPH_QT_LIB'] = 'PySide6'
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                                QSplitter, QPushButton, QLabel, QFileDialog, QSlider, QGridLayout, QFrame)
 from PySide6.QtCore import Qt, QTimer, QUrl, QFileInfo
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWebEngineCore import QWebEngineSettings
+
+import pyqtgraph as pg
 
 # --- 1. Parser Definition ---
 RECORD_SIZE = 21
@@ -179,7 +181,9 @@ class FlightReplayApp(QMainWindow):
         right_split = QSplitter(Qt.Vertical)
         main_split.addWidget(right_split)
         
-        settings = QWebEngineSettings.globalSettings()
+        from PySide6.QtWebEngineCore import QWebEngineProfile
+        
+        settings = QWebEngineProfile.defaultProfile().settings()
         settings.setAttribute(QWebEngineSettings.WebGLEnabled, True)
         settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
         
