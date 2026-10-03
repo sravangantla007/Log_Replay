@@ -8,11 +8,11 @@ A web-based flight data visualizer for reading and replaying binary `.bin` log f
 
 - **Binary Log Parser** — Reads packed 21-byte `Data_t` records with a modular format registry. New sensor types can be added without changing core parsing logic.
 - **Time-Series Charts** — 5 synchronized Chart.js panels: IMU acceleration (g), IMU gyroscope (°/s), high-G accelerometer, barometer (hPa + °C), and GPS altitude (m).
-- **3D Orientation Viewer** — Three.js cuboid representing the avionics PCB, with IMU-driven pitch/roll/yaw. Coordinate system: Z=up, X=toward user, Y=right.
-- **GPS Ground Track Map** — Leaflet map with CartoDB Dark Matter tiles showing the flight path, start/end markers, and moving position indicator.
-- **Playback Engine** — Real-time replay with adjustable speed (0.25×–10×), step-through (forward/backward), scrubber timeline, and keyboard shortcuts.
-- **Chronological Ordering** — Records are sorted by timestamp regardless of the asynchronous logging order from the firmware.
-- **Sci-Fi Theme** — Dark background with cyan/magenta/amber neon accents, monospace typography (JetBrains Mono + Orbitron).
+- **3D Orientation Viewer** — Three.js rendering a true-to-life `.glb` 3D model of the Avionics Board with PBR lighting and textures. Rotates based on IMU pitch/roll/yaw.
+- **GPS Ground Track Map** — Leaflet map with OpenStreetMap tiles showing the flight path, start/end markers, North indicator, and moving position indicator.
+- **Playback Engine** — Real-time replay with adjustable speed (0.25×–10×), step-through, scrubber timeline, and touch-friendly UI buttons.
+- **Responsive & Resizable** — CSS Grid layout with draggable splitters for horizontal and vertical resizing. Mobile-friendly stacked layout.
+- **100% Offline Capable** — All libraries (Three.js, Leaflet, Chart.js) are vendored locally. Map supports offline tile fetching.
 
 ## Quick Start
 
@@ -27,9 +27,20 @@ A web-based flight data visualizer for reading and replaying binary `.bin` log f
    python -m http.server 8000
    ```
 
-3. Open `http://localhost:8000` in your browser.
+3. Open `http://localhost:8000` (or your local IP) in your browser.
 
-4. Load a `.bin` flight log file via drag-and-drop or the file picker. Or click **⚡ TEST DATA** to generate a synthetic 40-second rocket flight.
+## Offline Maps
+
+The web app is fully functional without an internet connection, as all JavaScript libraries are saved locally. 
+
+If you want to view map imagery while offline at a remote launch site:
+1. Before leaving home, run the map downloader script:
+   ```bash
+   python download_tiles.py
+   ```
+2. Enter the central Latitude/Longitude of your launch site and a radius (e.g. `2` km).
+3. The script will download the map tiles directly into a `tiles/` folder.
+4. When using the app offline, click the **🗺️ MAP: ONLINE** button in the bottom playback toolbar to instantly switch to the offline local tiles!
 
 ## Keyboard Shortcuts
 
@@ -77,42 +88,28 @@ registerSensorType(0x06, 'MAGNETOMETER', (dv, offset) => ({
 
 ```
 Log_Replay/
-├── index.html          # App shell
-├── css/style.css       # Sci-fi dark theme
+├── index.html            # App shell
+├── board.glb             # 3D Model of Avionics Board
+├── download_tiles.py     # Offline Map tile fetcher
+├── css/style.css         # Sci-fi dark theme
 ├── js/
-│   ├── parser.js       # Binary format parser + registry
-│   ├── testdata.js     # Synthetic flight data generator
-│   ├── timeline.js     # Playback engine (rAF + step)
-│   ├── charts.js       # Chart.js time-series panels
-│   ├── viewer3d.js     # Three.js 3D PCB orientation
-│   ├── map.js          # Leaflet GPS ground track map
-│   └── main.js         # Bootstrap + event routing
+│   ├── vendor/           # Local dependencies (Leaflet, Chart.js, Three.js)
+│   ├── parser.js         # Binary format parser + registry
+│   ├── testdata.js       # Synthetic flight data generator
+│   ├── timeline.js       # Playback engine
+│   ├── charts.js         # Time-series panels & LED indicators
+│   ├── viewer3d.js       # 3D Model logic + Manual offset UI
+│   ├── map.js            # Leaflet map logic + Offline toggle
+│   └── main.js           # Bootstrap + event routing
 └── README.md
 ```
 
-## Coordinate System
-
-```
-Board Orientation:
-    ^ +Z (UP)
-    |    
-    |
-    |   
-    . ----------> +Y (RIGHT)
-   +X (TOWARD YOU)
-```
-
-IMU scale factors:
-- Accelerometer: ~2048 counts/g (±16g range)
-- Gyroscope: ~16.4 counts/°/s (±2000°/s range)
-
 ## Dependencies
 
-All loaded via CDN — no build step required:
-- [Three.js](https://threejs.org/) r170 — 3D rendering
-- [Chart.js](https://www.chartjs.org/) 4.4.6 — Time-series charts
-- [Leaflet](https://leafletjs.com/) 1.9.4 — GPS map
-- [CartoDB Dark Matter](https://carto.com/basemaps/) — Dark map tiles
+All core libraries are **vendored locally** inside `js/vendor/` to guarantee offline launch site functionality:
+- [Three.js](https://threejs.org/) r170 — 3D rendering (`three.module.js` + `GLTFLoader.js`)
+- [Chart.js](https://www.chartjs.org/) 4.4.6 — Time-series charts (`chart.umd.min.js`)
+- [Leaflet](https://leafletjs.com/) 1.9.4 — GPS map (`leaflet.js` + `leaflet.css`)
 
 ## License
 
