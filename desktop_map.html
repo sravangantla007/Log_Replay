@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { FlightMap } from './js/map.js';
+        const map = new FlightMap('map-container');
+        window.updateMap = function(lat, lon, alt) {
+            map.updateLocation(lat, lon);
+            // Optionally update path if we want
+        };
+        window.setPath = function(latLons) {
+            map.setPath(latLons);
+        };
+    </script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0a0a14; }
+        #map-container { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map-container" class="map-container"></div>
+</body>
+</html>
