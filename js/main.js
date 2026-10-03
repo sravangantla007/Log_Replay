@@ -89,6 +89,15 @@ function init() {
     btnStepBack.addEventListener('click', () => timeline.stepBack());
     btnStepForward.addEventListener('click', () => timeline.stepForward());
     
+    const btnMapToggle = document.getElementById('btn-map-toggle');
+    if (btnMapToggle) {
+        btnMapToggle.addEventListener('click', () => {
+            const isOffline = flightMap.toggleOfflineMode();
+            btnMapToggle.textContent = isOffline ? '🗺️ MAP: OFFLINE' : '🗺️ MAP: ONLINE';
+            btnMapToggle.style.color = isOffline ? '#00e5ff' : '#aaa';
+        });
+    }
+    
     scrubber.addEventListener('input', () => {
         timeline.seek(parseInt(scrubber.value, 10));
     });

@@ -70,8 +70,10 @@ export class FlightMap {
     // Default view: [0, 0] zoom level 2
     this.map.setView([0, 0], 2);
 
+    this.isOffline = false;
+    
     // Add OpenStreetMap tile layer (free, no API key)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    this.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
     }).addTo(this.map);
 
@@ -89,6 +91,22 @@ export class FlightMap {
     this._setupVisibilityWatchers(container);
 
     return this;
+  }
+
+  /**
+   * Toggles between online OpenStreetMap tiles and local offline tiles.
+   */
+  toggleOfflineMode(forceOffline = null) {
+    if (!this.map || !this.tileLayer) return false;
+    
+    this.isOffline = forceOffline !== null ? forceOffline : !this.isOffline;
+    
+    const newUrl = this.isOffline 
+        ? 'tiles/{z}/{x}/{y}.png' 
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        
+    this.tileLayer.setUrl(newUrl);
+    return this.isOffline;
   }
 
   /**
