@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <script type="module">
+        import { generateTestData } from './js/testdata.js';
+        import { parseFlightLog } from './js/parser.js';
+        
+        try {
+            const buffer = generateTestData();
+            const records = parseFlightLog(buffer);
+            document.body.innerHTML = "Success: " + records.length;
+        } catch(e) {
+            document.body.innerHTML = "Error: " + e.stack;
+        }
+    </script>
+</body>
+</html>

@@ -76,7 +76,7 @@ export class Viewer3D {
     this._lastTimestamp = null;
     this.isDestroyed = false;
 
-    this._createOffsetControls();
+    this._createSettingsPanel();
     this._createPcbCuboid();
     this._createAxisArrows();
     this._createGrid();
@@ -130,10 +130,7 @@ export class Viewer3D {
         }
       });
 
-      // Apply initial offset if set before load
-      if (this.initialOffset) {
-         this.pcbWrapper.position.copy(this.initialOffset);
-      }
+
 
       this.pcbGroup.add(this.pcbWrapper);
 
@@ -302,13 +299,11 @@ export class Viewer3D {
   }
 
   /**
-   * Creates a panel with sliders to adjust the origin offset.
+   * Creates a panel with settings (e.g., gyro yaw toggle).
    */
-  _createOffsetControls() {
-    this.initialOffset = new THREE.Vector3(0, 0, 0);
-
-    this.offsetPanel = document.createElement('div');
-    Object.assign(this.offsetPanel.style, {
+  _createSettingsPanel() {
+    this.settingsPanel = document.createElement('div');
+    Object.assign(this.settingsPanel.style, {
       position: 'absolute',
       bottom: '10px',
       left: '10px',
@@ -326,63 +321,10 @@ export class Viewer3D {
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
     });
 
-    const createSlider = (axis, min, max, val) => {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
-      
-      const label = document.createElement('span');
-      label.textContent = `Offset ${axis.toUpperCase()}`;
-      label.style.width = '60px';
-      label.style.color = '#00e5ff';
-
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = min;
-      slider.max = max;
-      slider.step = 0.01;
-      slider.value = val;
-      slider.style.width = '100px';
-      slider.style.cursor = 'pointer';
-      
-      const valDisplay = document.createElement('span');
-      valDisplay.textContent = Number(val).toFixed(2);
-      valDisplay.style.width = '40px';
-      valDisplay.style.textAlign = 'right';
-      
-      slider.addEventListener('input', (e) => {
-        const numVal = parseFloat(e.target.value);
-        valDisplay.textContent = numVal.toFixed(2);
-        this.initialOffset[axis] = numVal;
-        if (this.pcbWrapper) {
-          this.pcbWrapper.position[axis] = numVal;
-        }
-      });
-      
-      row.appendChild(label);
-      row.appendChild(slider);
-      row.appendChild(valDisplay);
-      this.offsetPanel.appendChild(row);
-    };
-
-    const title = document.createElement('div');
-    title.textContent = 'MANUAL ORIGIN OFFSET';
-    title.style.color = '#00e5ff';
-    title.style.fontWeight = 'bold';
-    title.style.marginBottom = '4px';
-    title.style.textAlign = 'center';
-    this.offsetPanel.appendChild(title);
-
-    createSlider('x', -2, 2, 0);
-    createSlider('y', -2, 2, 0);
-    createSlider('z', -2, 2, 0);
-
     const toggleRow = document.createElement('div');
     toggleRow.style.display = 'flex';
     toggleRow.style.alignItems = 'center';
     toggleRow.style.gap = '8px';
-    toggleRow.style.marginTop = '4px';
     
     const gyroCheckbox = document.createElement('input');
     gyroCheckbox.type = 'checkbox';
@@ -407,9 +349,9 @@ export class Viewer3D {
     
     toggleRow.appendChild(gyroCheckbox);
     toggleRow.appendChild(toggleLabel);
-    this.offsetPanel.appendChild(toggleRow);
+    this.settingsPanel.appendChild(toggleRow);
 
-    this.container.appendChild(this.offsetPanel);
+    this.container.appendChild(this.settingsPanel);
   }
 
   /**
