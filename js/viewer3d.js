@@ -378,6 +378,37 @@ export class Viewer3D {
     createSlider('y', -2, 2, 0);
     createSlider('z', -2, 2, 0);
 
+    const toggleRow = document.createElement('div');
+    toggleRow.style.display = 'flex';
+    toggleRow.style.alignItems = 'center';
+    toggleRow.style.gap = '8px';
+    toggleRow.style.marginTop = '4px';
+    
+    const gyroCheckbox = document.createElement('input');
+    gyroCheckbox.type = 'checkbox';
+    gyroCheckbox.id = 'gyro-yaw-toggle';
+    gyroCheckbox.checked = false; // default disabled due to drift
+    gyroCheckbox.style.cursor = 'pointer';
+    
+    this.integrateGyroYaw = false;
+    
+    gyroCheckbox.addEventListener('change', (e) => {
+        this.integrateGyroYaw = e.target.checked;
+        if (!this.integrateGyroYaw) {
+            this.currentYaw = 0; // Reset drift
+        }
+    });
+    
+    const toggleLabel = document.createElement('label');
+    toggleLabel.htmlFor = 'gyro-yaw-toggle';
+    toggleLabel.textContent = 'Enable Gyro Yaw (Drift Warning)';
+    toggleLabel.style.color = '#ff4444';
+    toggleLabel.style.cursor = 'pointer';
+    
+    toggleRow.appendChild(gyroCheckbox);
+    toggleRow.appendChild(toggleLabel);
+    this.offsetPanel.appendChild(toggleRow);
+
     this.container.appendChild(this.offsetPanel);
   }
 
@@ -461,8 +492,10 @@ export class Viewer3D {
     }
     this._lastTimestamp = now;
 
-    // Integrate gyro gz for yaw: currentYaw += (gz / 16.4) * (PI/180) * dt
-    this.currentYaw += gz_dps * (Math.PI / 180) * dt;
+    // Integrate gyro gz for yaw ONLY if enabled
+    if (this.integrateGyroYaw) {
+      this.currentYaw += gz_dps * (Math.PI / 180) * dt;
+    }
 
     // Create target quaternion from Euler(roll, pitch, currentYaw, 'XYZ')
     const targetEuler = new THREE.Euler(roll, pitch, this.currentYaw, 'XYZ');
