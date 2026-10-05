@@ -21,7 +21,7 @@ import {
   TYPE_ADXL,
   TYPE_GPS,
   TYPE_BOARD,
-} from './parser.js?v=5';
+} from './parser.js?v=7';
 
 // Flight simulation constants
 export const TOTAL_DURATION_MS = 40000; // 40 seconds

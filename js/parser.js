@@ -151,22 +151,22 @@ export function parseFlightLog(arrayBuffer) {
 
 export function getStats(records) {
   if (!records || records.length === 0) {
-    return { count: 0, duration: 0, sensors: {} };
+    return { totalRecords: 0, duration: 0, countByType: {} };
   }
   const minTime = records[0].time;
   const maxTime = records[records.length - 1].time;
-  const sensors = {};
+  const countByType = {};
 
   records.forEach(r => {
-    if (!sensors[r.name]) sensors[r.name] = 0;
-    sensors[r.name]++;
+    if (!countByType[r.name]) countByType[r.name] = 0;
+    countByType[r.name]++;
   });
 
   return {
-    count: records.length,
+    totalRecords: records.length,
     duration: maxTime - minTime,
     minTime,
     maxTime,
-    sensors,
+    countByType,
   };
 }

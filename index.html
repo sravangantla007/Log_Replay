@@ -34,7 +34,16 @@
     </script>
 
     <!-- App modules -->
-    <script type="module" src="js/main.js?v=5"></script>
+    <script type="module" src="js/main.js?v=7"></script>
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            alert('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert('Unhandled promise rejection: ' + event.reason);
+        });
+    </script>
 </head>
 <body>
 
