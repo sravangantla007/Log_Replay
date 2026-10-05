@@ -106,6 +106,30 @@ export class FlightMap {
     });
     this.map.addControl(new NorthControl());
 
+    // Add GPS Stats control in top-left
+    const GpsStatsControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function() {
+        const div = L.DomUtil.create('div', 'leaflet-control-gps-stats');
+        div.id = 'map-gps-stats';
+        div.innerHTML = 'Sats: -- | Fix: None';
+        div.style.backgroundColor = 'rgba(10, 10, 20, 0.8)';
+        div.style.color = '#00e5ff';
+        div.style.border = '1px solid rgba(0, 229, 255, 0.3)';
+        div.style.padding = '6px 10px';
+        div.style.borderRadius = '4px';
+        div.style.fontFamily = "'JetBrains Mono', monospace";
+        div.style.fontSize = '11px';
+        div.style.fontWeight = 'bold';
+        div.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+        div.style.pointerEvents = 'none';
+        div.style.marginTop = '10px';
+        div.style.marginLeft = '10px';
+        return div;
+      }
+    });
+    this.map.addControl(new GpsStatsControl());
+
     this.launched = true;
 
     // Handle maps initialized inside hidden or resizing containers
@@ -241,6 +265,26 @@ export class FlightMap {
         maxZoom: 18
       });
     }
+  }
+
+  updateStats(gpsLowData) {
+    const el = document.getElementById('map-gps-stats');
+    if (!el || !gpsLowData) return;
+    const data = (gpsLowData.data && typeof gpsLowData.data === 'object') ? gpsLowData.data : gpsLowData;
+    
+    // fixType: 0=No Fix, 1=DR, 2=2D, 3=3D, 4=GNSS+DR, 5=Time only
+    const fixTypes = ["None", "DeadRec", "2D Fix", "3D Fix", "GNSS+DR", "Time"];
+    const fixStr = fixTypes[data.fixType] || `Fix ${data.fixType}`;
+    
+    // bit 0 of flags is gnssFixOK
+    const fixOk = (data.flags & 1) !== 0;
+    
+    let color = '#ff4444'; // Red if no fix
+    if (fixOk) {
+       color = (data.fixType === 3) ? '#44ff44' : '#00e5ff'; // Green for 3D, Cyan for 2D/other ok
+    }
+    
+    el.innerHTML = `Sats: ${data.numSV} | Fix: <span style="color:${color}">${fixStr}</span>`;
   }
 
   /**

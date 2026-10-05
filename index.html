@@ -34,7 +34,7 @@
     </script>
 
     <!-- App modules -->
-    <script type="module" src="js/main.js?v=8"></script>
+    <script type="module" src="js/main.js?v=9"></script>
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             alert('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
@@ -58,6 +58,13 @@
             <input type="file" id="file-input" accept=".bin" style="display:none">
             <span id="file-label" class="file-name">No file loaded</span>
             <button class="btn" id="btn-test-data" title="Generate synthetic 40s rocket flight">⚡ TEST DATA</button>
+            <div style="display:inline-flex; align-items:center; gap:5px; margin-left: 15px; background: rgba(0,229,255,0.1); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(0,229,255,0.3);">
+                <span style="color:#00e5ff; font-size: 11px;">CROP (sec):</span>
+                <input type="number" id="crop-start" placeholder="start" style="width: 50px; background: transparent; color: white; border: 1px solid #333; padding: 2px;">
+                <span>-</span>
+                <input type="number" id="crop-end" placeholder="end" style="width: 50px; background: transparent; color: white; border: 1px solid #333; padding: 2px;">
+                <button class="btn" id="btn-crop" style="padding: 2px 6px; font-size: 10px;">APPLY</button>
+            </div>
         </div>
 
         <div class="stats">
@@ -97,15 +104,19 @@
                     <span class="chart-title">BOARD STATUS</span>
                     <span class="chart-val-preview" id="board-state-text">STATE: PAD</span>
                 </div>
-                <div class="status-grid" id="status-grid">
-                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">IMU_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">BARO_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">ADXL_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">GPS_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">FLASH_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">PYRO_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">SYS_ERR</span></div>
-                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">BAT_LOW</span></div>
+                <div style="font-size: 10px; margin: 4px 0; color: #888;">ERRORS</div>
+                <div class="status-grid" id="status-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 8px;">
+                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">IMU</span></div>
+                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">BARO</span></div>
+                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">GPS</span></div>
+                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">GSM</span></div>
+                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">SD CARD</span></div>
+                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">LOGGING</span></div>
+                </div>
+                <div style="font-size: 10px; margin: 4px 0; color: #888;">TELEMETRY FLAGS</div>
+                <div class="status-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">CMD RX</span></div>
+                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">ACK RX</span></div>
                 </div>
             </div>
         </section>

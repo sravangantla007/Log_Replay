@@ -6,12 +6,12 @@
  * the event flow between modules during playback and stepping.
  */
 
-import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_BOARD, getStats } from './parser.js?v=8';
-import { Timeline } from './timeline.js?v=8';
-import { ChartManager } from './charts.js?v=8';
-import { Viewer3D } from './viewer3d.js?v=8';
-import { FlightMap } from './map.js?v=8';
-import { generateTestData } from './testdata.js?v=8';
+import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_GPS_LOW, TYPE_BOARD, getStats } from './parser.js?v=9';
+import { Timeline } from './timeline.js?v=9';
+import { ChartManager } from './charts.js?v=9';
+import { Viewer3D } from './viewer3d.js?v=9';
+import { FlightMap } from './map.js?v=9';
+import { generateTestData } from './testdata.js?v=9';
 
 // ── Module Instances ──────────────────────────────────────────────
 let timeline   = null;
@@ -109,6 +109,10 @@ function init() {
     if (btnTestData) {
         btnTestData.addEventListener('click', loadTestData);
     }
+    const btnCrop = document.getElementById('btn-crop');
+    if (btnCrop) {
+        btnCrop.addEventListener('click', applyCrop);
+    }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', onKeyDown);
@@ -201,16 +205,41 @@ function loadTestData() {
     processBuffer(buffer, 'test_flight.bin');
 }
 
+let globalFullRecords = [];
+
 function processBuffer(buffer, filename) {
-    // Parse binary records and sort chronologically
-    records = parseFlightLog(buffer);
-    
-    if (records.length === 0) {
+    globalFullRecords = parseFlightLog(buffer);
+    if (globalFullRecords.length === 0) {
         console.warn('No valid records found in file');
         return;
     }
+    
+    const baseT = globalFullRecords[0].time;
+    const maxT = globalFullRecords[globalFullRecords.length-1].time;
+    document.getElementById('crop-start').value = 0;
+    document.getElementById('crop-end').value = ((maxT - baseT) / 1000).toFixed(1);
 
-    // Build GPS index map (record index -> GPS track point index)
+    applyCrop();
+}
+
+function applyCrop() {
+    if (globalFullRecords.length === 0) return;
+    
+    const cropStartSec = parseFloat(document.getElementById('crop-start').value) || 0;
+    const cropEndSec = parseFloat(document.getElementById('crop-end').value) || 999999;
+    
+    const baseTime = globalFullRecords[0].time;
+    
+    records = globalFullRecords.filter(r => {
+        const sec = (r.time - baseTime) / 1000.0;
+        return sec >= cropStartSec && sec <= cropEndSec;
+    });
+
+    if (records.length === 0) {
+        alert("Crop range is empty!");
+        return;
+    }
+
     gpsIndices = [];
     let gpsTrackIndex = 0;
     for (let i = 0; i < records.length; i++) {
@@ -219,37 +248,31 @@ function processBuffer(buffer, filename) {
         }
     }
 
-    // Update stats display
     const stats = getStats(records);
     updateStatsDisplay(stats);
 
-    // Hide welcome, show data
     if (welcomePanel) welcomePanel.style.display = 'none';
 
-    // Load data into modules
     timeline.load(records);
     charts.loadData(records);
     
-    // Load GPS track — re-init map to ensure container is sized
     const gpsRecords = records.filter(r => r.type === TYPE_GPS);
-    flightMap.init();  // re-init if needed (no-ops if already launched)
+    flightMap.init();
     flightMap.loadTrack(gpsRecords);
-    // Staggered invalidateSize to catch CSS grid layout settling
+    
     setTimeout(() => flightMap.invalidateSize(), 100);
     setTimeout(() => flightMap.invalidateSize(), 500);
 
-    // Reset 3D viewer
     if (viewer3d) viewer3d.reset();
 
-    // Setup scrubber
     scrubber.max = records.length - 1;
     scrubber.value = 0;
 
-    // Show initial state
-    updateTimeDisplay(0, 0);
+    updateTimeDisplay(0, timeline.durationMs);
     updateRecordCounter(0, records.length);
-
-    console.log(`[FlightReplay] Loaded ${filename}: ${records.length} records, ${Timeline.formatTime(stats.duration)} duration`);
+    onIndexChange(0, records.length);
+    
+    console.log(`[FlightReplay] Cropped to ${records.length} records`);
 }
 
 // ── Timeline Event Handlers ───────────────────────────────────────
@@ -257,6 +280,7 @@ function processBuffer(buffer, filename) {
 // Accumulate latest sensor data per frame — only the last value matters
 let latestIMU = null;
 let latestGPS = null;
+let latestGPS_LOW = null;
 let latestBOARD = null;
 
 function onTimelineTick(record, index) {
@@ -267,6 +291,9 @@ function onTimelineTick(record, index) {
             break;
         case TYPE_GPS:
             latestGPS = record.data;
+            break;
+        case TYPE_GPS_LOW:
+            latestGPS_LOW = record.data;
             break;
         case TYPE_BOARD:
             latestBOARD = record.data;
@@ -292,9 +319,11 @@ function onIndexChange(index, total) {
         viewer3d.updateOrientation(latestIMU);
         latestIMU = null;
     }
-    if (latestGPS) {
-        flightMap.updatePosition(latestGPS);
+    if (latestGPS || latestGPS_LOW) {
+        if (latestGPS) flightMap.updatePosition(latestGPS);
+        if (latestGPS_LOW) flightMap.updateStats(latestGPS_LOW);
         latestGPS = null;
+        latestGPS_LOW = null;
     }
     if (latestBOARD) {
         updateBoardStatus(latestBOARD);
@@ -303,15 +332,17 @@ function onIndexChange(index, total) {
 }
 
 function updateBoardStatus(boardData) {
-    // Update LEDs from error_code (bitmask)
     const err = boardData.error_code || 0;
     for (let i = 0; i < 8; i++) {
         const led = document.getElementById(`led-e${i}`);
         if (led) {
-            if ((err & (1 << i)) !== 0) {
-                led.className = 'led red'; // Bit set = error
+            const bitSet = (err & (1 << i)) !== 0;
+            if (i < 6) {
+                // Error flags: 1 = red (error), 0 = green (ok)
+                led.className = bitSet ? 'led red' : 'led green';
             } else {
-                led.className = 'led green'; // Bit clear = ok
+                // Telemetry flags: 1 = blue (active), 0 = off (dark)
+                led.className = bitSet ? 'led blue' : 'led off';
             }
         }
     }
