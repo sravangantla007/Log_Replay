@@ -305,12 +305,9 @@ export function generateTestData(seed = 0x5a17e0) {
     const altMslMm = (PAD_ALTITUDE_M + hRel) * 1000.0;
     const gpsAlt = clampInt32(altMslMm + gpsAltNoise());
 
-    const utcTime = clampUint32(baseUtcTime + Math.floor(tSec));
-
-    view.setUint32(pOffset, utcTime, true);
-    view.setInt32(pOffset + 4, lat, true);
-    view.setInt32(pOffset + 8, lon, true);
-    view.setInt32(pOffset + 12, gpsAlt, true);
+    view.setInt32(pOffset, lat, true);
+    view.setInt32(pOffset + 4, lon, true);
+    view.setInt32(pOffset + 8, gpsAlt, true);
   }
 
   function writeBOARD(offset, t) {
