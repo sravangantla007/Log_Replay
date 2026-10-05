@@ -6,12 +6,12 @@
  * the event flow between modules during playback and stepping.
  */
 
-import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_BOARD, getStats } from './parser.js?v=4';
-import { Timeline } from './timeline.js?v=4';
-import { ChartManager } from './charts.js?v=4';
-import { Viewer3D } from './viewer3d.js?v=4';
-import { FlightMap } from './map.js?v=4';
-import { generateTestData } from './testdata.js?v=4';
+import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_BOARD, getStats } from './parser.js?v=5';
+import { Timeline } from './timeline.js?v=5';
+import { ChartManager } from './charts.js?v=5';
+import { Viewer3D } from './viewer3d.js?v=5';
+import { FlightMap } from './map.js?v=5';
+import { generateTestData } from './testdata.js?v=5';
 
 // ── Module Instances ──────────────────────────────────────────────
 let timeline   = null;
