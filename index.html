@@ -34,7 +34,7 @@
     </script>
 
     <!-- App modules -->
-    <script type="module" src="js/main.js?v=9"></script>
+    <script type="module" src="js/main.js?v=10"></script>
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             alert('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
@@ -105,18 +105,25 @@
                     <span class="chart-val-preview" id="board-state-text">STATE: PAD</span>
                 </div>
                 <div style="font-size: 10px; margin: 4px 0; color: #888;">ERRORS</div>
-                <div class="status-grid" id="status-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 8px;">
-                    <div class="status-item"><div class="led" id="led-e0"></div><span class="led-label">IMU</span></div>
-                    <div class="status-item"><div class="led" id="led-e1"></div><span class="led-label">BARO</span></div>
-                    <div class="status-item"><div class="led" id="led-e2"></div><span class="led-label">GPS</span></div>
-                    <div class="status-item"><div class="led" id="led-e3"></div><span class="led-label">GSM</span></div>
-                    <div class="status-item"><div class="led" id="led-e4"></div><span class="led-label">SD CARD</span></div>
-                    <div class="status-item"><div class="led" id="led-e5"></div><span class="led-label">LOGGING</span></div>
+                <div class="status-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 8px;">
+                    <div class="status-item"><div class="led" id="led-err-0"></div><span class="led-label">IMU</span></div>
+                    <div class="status-item"><div class="led" id="led-err-1"></div><span class="led-label">BARO</span></div>
+                    <div class="status-item"><div class="led" id="led-err-2"></div><span class="led-label">GPS</span></div>
+                    <div class="status-item"><div class="led" id="led-err-3"></div><span class="led-label">GSM</span></div>
+                    <div class="status-item"><div class="led" id="led-err-4"></div><span class="led-label">SD_CARD</span></div>
+                    <div class="status-item"><div class="led" id="led-err-5"></div><span class="led-label">FLASH</span></div>
+                    <div class="status-item"><div class="led" id="led-err-6"></div><span class="led-label">TX_ERR</span></div>
                 </div>
-                <div style="font-size: 10px; margin: 4px 0; color: #888;">TELEMETRY FLAGS</div>
-                <div class="status-grid" style="grid-template-columns: repeat(2, 1fr);">
-                    <div class="status-item"><div class="led" id="led-e6"></div><span class="led-label">CMD RX</span></div>
-                    <div class="status-item"><div class="led" id="led-e7"></div><span class="led-label">ACK RX</span></div>
+                <div style="font-size: 10px; margin: 4px 0; color: #888;">FLAGS</div>
+                <div class="status-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="status-item"><div class="led" id="led-flg-2"></div><span class="led-label">LOG EN</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-3"></div><span class="led-label">CMD RX</span></div>
+                    <div class="status-item"><div class="led" id="led-err-7"></div><span class="led-label">ACK RX</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-0"></div><span class="led-label">TX PROG</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-1"></div><span class="led-label">TX DONE</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-4"></div><span class="led-label">Q_DROP</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-5"></div><span class="led-label">SD_DROP</span></div>
+                    <div class="status-item"><div class="led" id="led-flg-7"></div><span class="led-label">GPS_POS</span></div>
                 </div>
             </div>
         </section>

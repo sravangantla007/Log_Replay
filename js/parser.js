@@ -98,12 +98,14 @@ function parseGPS_LOW(dv, offset) {
 
 function parseBOARD(dv, offset) {
   return {
-    temp: dv.getUint8(offset),
-    v_batt: dv.getUint8(offset + 1),
-    state: dv.getUint8(offset + 2),
-    error_code: dv.getUint8(offset + 3),
-    pyro_state: dv.getUint8(offset + 4),
-    RSSI: dv.getUint8(offset + 5),
+    cmd: dv.getUint8(offset),
+    cmd_param: dv.getUint8(offset + 1),
+    v_batt: dv.getUint8(offset + 2),
+    state: dv.getUint8(offset + 3),
+    error_code: dv.getUint8(offset + 4),
+    flags: dv.getUint8(offset + 5),
+    pyro_state: dv.getUint8(offset + 6),
+    RSSI: dv.getUint8(offset + 7),
   };
 }
 

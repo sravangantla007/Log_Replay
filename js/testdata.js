@@ -21,7 +21,7 @@ import {
   TYPE_ADXL,
   TYPE_GPS,
   TYPE_BOARD,
-} from './parser.js?v=9';
+} from './parser.js?v=10';
 
 // Flight simulation constants
 export const TOTAL_DURATION_MS = 40000; // 40 seconds
@@ -347,12 +347,14 @@ export function generateTestData(seed = 0x5a17e0) {
     const hRel = getRelativeAltitudeMeters(tSec);
     const rssi = clampUint8(95 - Math.round((hRel / 1500.0) * 18) + Math.round((prng() - 0.5) * 2));
 
-    view.setUint8(pOffset, temp);
-    view.setUint8(pOffset + 1, vBatt);
-    view.setUint8(pOffset + 2, state);
-    view.setUint8(pOffset + 3, errorCode);
-    view.setUint8(pOffset + 4, pyroState);
-    view.setUint8(pOffset + 5, rssi);
+    view.setUint8(pOffset, 0); // cmd
+    view.setUint8(pOffset + 1, 0); // cmd_param
+    view.setUint8(pOffset + 2, vBatt); // v_batt
+    view.setUint8(pOffset + 3, state); // state
+    view.setUint8(pOffset + 4, errorCode); // error_code
+    view.setUint8(pOffset + 5, 0); // flags (let's say 0 for test data)
+    view.setUint8(pOffset + 6, pyroState); // pyro_state
+    view.setUint8(pOffset + 7, rssi); // RSSI
   }
 
   // Write records in INTERLEAVED batch blocks (simulating embedded FIFO flush cycles)

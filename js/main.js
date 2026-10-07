@@ -6,12 +6,12 @@
  * the event flow between modules during playback and stepping.
  */
 
-import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_GPS_LOW, TYPE_BOARD, getStats } from './parser.js?v=9';
-import { Timeline } from './timeline.js?v=9';
-import { ChartManager } from './charts.js?v=9';
-import { Viewer3D } from './viewer3d.js?v=9';
-import { FlightMap } from './map.js?v=9';
-import { generateTestData } from './testdata.js?v=9';
+import { parseFlightLog, TYPE_IMU, TYPE_BARO, TYPE_ADXL, TYPE_GPS, TYPE_GPS_LOW, TYPE_BOARD, getStats } from './parser.js?v=10';
+import { Timeline } from './timeline.js?v=10';
+import { ChartManager } from './charts.js?v=10';
+import { Viewer3D } from './viewer3d.js?v=10';
+import { FlightMap } from './map.js?v=10';
+import { generateTestData } from './testdata.js?v=10';
 
 // ── Module Instances ──────────────────────────────────────────────
 let timeline   = null;
@@ -334,14 +334,30 @@ function onIndexChange(index, total) {
 function updateBoardStatus(boardData) {
     const err = boardData.error_code || 0;
     for (let i = 0; i < 8; i++) {
-        const led = document.getElementById(`led-e${i}`);
+        const led = document.getElementById(`led-err-${i}`);
         if (led) {
             const bitSet = (err & (1 << i)) !== 0;
-            if (i < 6) {
-                // Error flags: 1 = red (error), 0 = green (ok)
+            if (i < 7) {
+                // Real errors (0-6): 1 = red, 0 = green
                 led.className = bitSet ? 'led red' : 'led green';
             } else {
-                // Telemetry flags: 1 = blue (active), 0 = off (dark)
+                // ACK RX (bit 7): 1 = blue, 0 = off
+                led.className = bitSet ? 'led blue' : 'led off';
+            }
+        }
+    }
+
+    const flags = boardData.flags || 0;
+    for (let i = 0; i < 8; i++) {
+        const led = document.getElementById(`led-flg-${i}`);
+        if (led) {
+            const bitSet = (flags & (1 << i)) !== 0;
+            // All general flags glow blue when active, off when inactive
+            // (Except if we wanted drop queues to be orange, but blue is safe)
+            if (i === 4 || i === 5) {
+                // Q_DROP / SD_DROP: 1 = orange (warning), 0 = off
+                led.className = bitSet ? 'led orange' : 'led off';
+            } else {
                 led.className = bitSet ? 'led blue' : 'led off';
             }
         }
